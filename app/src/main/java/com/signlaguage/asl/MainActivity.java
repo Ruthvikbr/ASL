@@ -3,17 +3,24 @@ package com.signlaguage.asl;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.ImageFormat;
+import android.graphics.Rect;
+import android.graphics.YuvImage;
 import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.ml.common.FirebaseMLException;
 import com.google.firebase.ml.custom.FirebaseCustomLocalModel;
 import com.google.firebase.ml.custom.FirebaseModelDataType;
@@ -22,12 +29,15 @@ import com.google.firebase.ml.custom.FirebaseModelInputs;
 import com.google.firebase.ml.custom.FirebaseModelInterpreter;
 import com.google.firebase.ml.custom.FirebaseModelInterpreterOptions;
 import com.google.firebase.ml.custom.FirebaseModelOutputs;
+import com.otaliastudios.cameraview.CameraListener;
 import com.otaliastudios.cameraview.CameraView;
+import com.otaliastudios.cameraview.PictureResult;
 import com.otaliastudios.cameraview.frame.Frame;
 import com.otaliastudios.cameraview.frame.FrameProcessor;
 import com.otaliastudios.cameraview.size.Size;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
@@ -37,18 +47,21 @@ public class MainActivity extends AppCompatActivity {
     CameraView camera;
     FirebaseModelInterpreter interpreter;
     FirebaseModelInputOutputOptions inputOutputOptions;
+    TextView resultTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        FirebaseApp.initializeApp(this);
         camera = findViewById(R.id.camera);
         camera.setLifecycleOwner(this);
+        resultTextView = findViewById(R.id.resultTextView);
         Button start = findViewById(R.id.startCamera);
         start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startCamera();
+                takePicture();
             }
         });
         Button stop = findViewById(R.id.stopCamera);
@@ -59,7 +72,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+    private void takePicture(){
+        camera.addCameraListener(new CameraListener() {
+            @Override
+            public void onPictureTaken(@NonNull PictureResult result) {
+                byte[] data = result.getData();
+                Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
+                loadModel(bmp);
+            }
+        });
+        camera.takePicture();
+    }
     private void startCamera(){
+        camera.setFrameProcessingPoolSize(1);
+        camera.setFrameProcessingFormat(ImageFormat.YUV_420_888);
         camera.addFrameProcessor(new FrameProcessor() {
             @Override
             public void process(@NonNull Frame frame) {
@@ -70,7 +96,17 @@ public class MainActivity extends AppCompatActivity {
                 int viewRotation = frame.getRotationToView();
                 if (frame.getDataClass() == byte[].class) {
                     byte[] data = frame.getData();
-                    Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
+                    Log.v("Frame",""+frame.getData());
+                    YuvImage yuvimage=new YuvImage(data, ImageFormat.NV21, 100, 100, null);
+                    ByteArrayOutputStream b = new ByteArrayOutputStream();
+                    yuvimage.compressToJpeg(new Rect(0, 0, 100, 100), 80, b);
+                    byte[] jData = b.toByteArray();
+
+                    // Convert to Bitmap
+                    Bitmap bmp = BitmapFactory.decodeByteArray(jData, 0, jData.length);
+                    if(bmp==null){
+                        Log.v("Null","Null");
+                    }
                     loadModel(bmp);
                 } else if (frame.getDataClass() == Image.class) {
                     Image data = frame.getData();
@@ -108,6 +144,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadModel(Bitmap bitmap) {
+        AssetManager as = getAssets();
+
         FirebaseCustomLocalModel localModel = new FirebaseCustomLocalModel.Builder()
                 .setAssetFilePath("model2.tflite")
                 .build();
@@ -157,18 +195,22 @@ public class MainActivity extends AppCompatActivity {
                                 public void onSuccess(FirebaseModelOutputs result) {
                                     float[][] output = result.getOutput(0);
                                     float[] probabilities = output[0];
-                                    Log.v("outputs"," "+ Arrays.toString(output[0]));
-                                    try{
-                                        BufferedReader reader = new BufferedReader(
-                                                new InputStreamReader(getAssets().open("labels.txt")));
-                                        for (float probability : probabilities) {
-                                            String label = reader.readLine();
+                                    Log.v("outputs"," "+ Arrays.toString(probabilities));
+                                    int i = getIndexOfLargest(probabilities);
+                                    resultTextView.setText(""+probabilities[i]+" "+i);
+                                    String[] label = {"A","B","C","D","DEL","E","F","G","H","I","J","K","L","M","N","NOTHING","O","P","Q","R","S","SPACE","T","U","V","W","X","Y","Z"};
 
-                                            Log.i("MLKit", String.format("%s: %1.4f", label, probability));
-                                        }
-                                    }catch(IOException e){
-                                        e.printStackTrace();
-                                    }
+//                                    try{
+//                                        BufferedReader reader = new BufferedReader(
+//                                                new InputStreamReader(getAssets().open("labels.txt")));
+//                                        for (float probability : probabilities) {
+//                                            String label = reader.readLine();
+//
+//                                            Log.v("outputLabel", String.format("%s: %1.4f", label, probability));
+//                                        }
+//                                    }catch(IOException e){
+//                                        e.printStackTrace();
+//                                    }
                                 }
                             })
                     .addOnFailureListener(
@@ -184,5 +226,16 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+    }
+    public int getIndexOfLargest( float[] array )
+    {
+        if ( array == null || array.length == 0 ) return -1; // null or empty
+
+        int largest = 0;
+        for ( int i = 1; i < array.length; i++ )
+        {
+            if ( array[i] > array[largest] ) largest = i;
+        }
+        return largest; // position of the first largest found
     }
 }

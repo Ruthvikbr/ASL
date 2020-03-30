@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1028485268675",
+    "firebase_url": "https://asl2-c7030.firebaseio.com",
+    "project_id": "asl2-c7030",
+    "storage_bucket": "asl2-c7030.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1028485268675:android:52fb686f306c1eb38c4e76",
+        "android_client_info": {
+          "package_name": "com.signlaguage.asl"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1028485268675-febk4gsksbj92cmtskmj3naj0tfif968.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALiAg4o3hBMCBsVT9IvQW04aZIGJVAYFA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1028485268675-febk4gsksbj92cmtskmj3naj0tfif968.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

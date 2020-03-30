@@ -20,6 +20,10 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+
+        aaptOptions {
+            noCompress "tflite"  // Your model's file extension: "tflite", "lite", etc.
+        }
     }
 
 }
@@ -35,3 +39,4 @@ dependencies {
     implementation 'org.tensorflow:tensorflow-lite:1.13.1'
     implementation 'com.google.firebase:firebase-ml-model-interpreter:22.0.1'
 }
+apply plugin: 'com.google.gms.google-services'
