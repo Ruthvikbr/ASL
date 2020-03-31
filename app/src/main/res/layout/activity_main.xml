@@ -23,7 +23,7 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/start"
+            android:text="@string/PICTURE"
             tools:ignore="ButtonStyle"
             android:layout_weight="1"
             android:id="@+id/startCamera"
@@ -32,7 +32,7 @@
             android:id="@+id/stopCamera"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/stop"
+            android:text="@string/clear"
             tools:ignore="ButtonStyle"
             android:layout_weight="1"
             />
