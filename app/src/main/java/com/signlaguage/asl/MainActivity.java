@@ -13,6 +13,9 @@ import android.graphics.YuvImage;
 import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -237,5 +240,21 @@ public class MainActivity extends AppCompatActivity {
             if ( array[i] > array[largest] ) largest = i;
         }
         return largest; // position of the first largest found
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.settings, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.ClearText) {
+            resultTextView.setText(" ");
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
