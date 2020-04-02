@@ -71,17 +71,24 @@ public class MainActivity extends AppCompatActivity {
         stop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stopCamera();
+                //stopCamera();
             }
         });
     }
     private void takePicture(){
+//        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.test);
+//        loadModel(bm);
         camera.addCameraListener(new CameraListener() {
             @Override
             public void onPictureTaken(@NonNull PictureResult result) {
                 byte[] data = result.getData();
                 Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
-                loadModel(bmp);
+
+                final int destWidth = 64;
+                final int destHeight = 64;
+                Bitmap b2 = Bitmap.createScaledBitmap(bmp, destWidth, destHeight, false);
+               Toast.makeText(MainActivity.this," "+destWidth+" "+destHeight,Toast.LENGTH_SHORT).show();
+                loadModel(b2);
             }
         });
         camera.takePicture();
@@ -100,17 +107,15 @@ public class MainActivity extends AppCompatActivity {
                 if (frame.getDataClass() == byte[].class) {
                     byte[] data = frame.getData();
                     Log.v("Frame",""+frame.getData());
-                    YuvImage yuvimage=new YuvImage(data, ImageFormat.NV21, 100, 100, null);
-                    ByteArrayOutputStream b = new ByteArrayOutputStream();
-                    yuvimage.compressToJpeg(new Rect(0, 0, 100, 100), 80, b);
-                    byte[] jData = b.toByteArray();
 
                     // Convert to Bitmap
-                    Bitmap bmp = BitmapFactory.decodeByteArray(jData, 0, jData.length);
+                    Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
                     if(bmp==null){
                         Log.v("Null","Null");
+                    }else{
+                        loadModel(bmp);
                     }
-                    loadModel(bmp);
+
                 } else if (frame.getDataClass() == Image.class) {
                     Image data = frame.getData();
                     // Process android.media.Image...
@@ -150,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
         AssetManager as = getAssets();
 
         FirebaseCustomLocalModel localModel = new FirebaseCustomLocalModel.Builder()
-                .setAssetFilePath("model2.tflite")
+                .setAssetFilePath("upgraded.tflite")
                 .build();
 
 
@@ -164,16 +169,16 @@ public class MainActivity extends AppCompatActivity {
         try {
             inputOutputOptions =
                     new FirebaseModelInputOutputOptions.Builder()
-                            .setInputFormat(0, FirebaseModelDataType.FLOAT32, new int[]{1, 200, 200, 3})
+                            .setInputFormat(0, FirebaseModelDataType.FLOAT32, new int[]{1, 64, 64, 3})
                             .setOutputFormat(0, FirebaseModelDataType.FLOAT32, new int[]{1, 29})
                             .build();
         } catch (FirebaseMLException e) {
             e.printStackTrace();
         }
         int batchNum = 0;
-        float[][][][] input = new float[1][200][200][3];
-        for (int x = 0; x < 200; x++) {
-            for (int y = 0; y < 200; y++) {
+        float[][][][] input = new float[1][64][64][3];
+        for (int x = 0; x < 64; x++) {
+            for (int y = 0; y < 64; y++) {
                 int pixel = bitmap.getPixel(x, y);
 
                 input[batchNum][x][y][0] = (Color.red(pixel) - 127) / 128.0f;
@@ -198,22 +203,20 @@ public class MainActivity extends AppCompatActivity {
                                 public void onSuccess(FirebaseModelOutputs result) {
                                     float[][] output = result.getOutput(0);
                                     float[] probabilities = output[0];
-                                    Log.v("outputs"," "+ Arrays.toString(probabilities));
+                                    Log.v("probable"," "+ Arrays.toString(probabilities));
                                     int i = getIndexOfLargest(probabilities);
-                                    resultTextView.setText(""+probabilities[i]+" "+i);
-                                    String[] label = {"A","B","C","D","DEL","E","F","G","H","I","J","K","L","M","N","NOTHING","O","P","Q","R","S","SPACE","T","U","V","W","X","Y","Z"};
 
-//                                    try{
+                                        String[] labels = { "A","B","C","D","DEL","E","F","G","H","I","J","K","L","M","N","NOTHING","O","P","Q","R","S","SPACE"
+                                        ,"T","U","V","W","X","Y","Z"};
+                                        resultTextView.setText(labels[i]);
 //                                        BufferedReader reader = new BufferedReader(
 //                                                new InputStreamReader(getAssets().open("labels.txt")));
 //                                        for (float probability : probabilities) {
 //                                            String label = reader.readLine();
-//
 //                                            Log.v("outputLabel", String.format("%s: %1.4f", label, probability));
 //                                        }
-//                                    }catch(IOException e){
-//                                        e.printStackTrace();
-//                                    }
+
+
                                 }
                             })
                     .addOnFailureListener(
@@ -239,7 +242,7 @@ public class MainActivity extends AppCompatActivity {
         {
             if ( array[i] > array[largest] ) largest = i;
         }
-        return largest; // position of the first largest found
+        return largest;
     }
 
     @Override
