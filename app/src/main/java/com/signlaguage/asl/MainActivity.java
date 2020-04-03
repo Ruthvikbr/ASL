@@ -17,7 +17,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -76,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
     private void takePicture(){
-//        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.test);
+//        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.raw.test1);
 //        loadModel(bm);
         camera.addCameraListener(new CameraListener() {
             @Override
@@ -84,11 +87,9 @@ public class MainActivity extends AppCompatActivity {
                 byte[] data = result.getData();
                 Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
 
-                final int destWidth = 64;
-                final int destHeight = 64;
-                Bitmap b2 = Bitmap.createScaledBitmap(bmp, destWidth, destHeight, false);
-               Toast.makeText(MainActivity.this," "+destWidth+" "+destHeight,Toast.LENGTH_SHORT).show();
-                loadModel(b2);
+
+               Toast.makeText(MainActivity.this," "+bmp.getWidth()+" "+bmp.getHeight(),Toast.LENGTH_SHORT).show();
+                loadModel(bmp);
             }
         });
         camera.takePicture();
@@ -152,8 +153,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadModel(Bitmap bitmap) {
-        AssetManager as = getAssets();
 
+        bitmap = Bitmap.createScaledBitmap(bitmap, 64, 64, true);
+//        ImageView img = new ImageView(this);
+//        img.setImageBitmap(bitmap);
+//        ((LinearLayout)findViewById(R.id.ll)).addView(img, 0, new LinearLayout.LayoutParams(
+//                LinearLayout.LayoutParams.WRAP_CONTENT,
+//                LinearLayout.LayoutParams.WRAP_CONTENT
+//        ));
         FirebaseCustomLocalModel localModel = new FirebaseCustomLocalModel.Builder()
                 .setAssetFilePath("upgraded.tflite")
                 .build();
