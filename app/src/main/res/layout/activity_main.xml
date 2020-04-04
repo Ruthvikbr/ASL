@@ -33,7 +33,7 @@
             android:id="@+id/stopCamera"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/clear"
+            android:text="@string/speak"
             tools:ignore="ButtonStyle"
             android:layout_weight="1"
             />

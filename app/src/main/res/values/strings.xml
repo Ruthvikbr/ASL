@@ -4,4 +4,5 @@
     <string name="stop">STOP</string>
     <string name="PICTURE">PICTURE</string>
     <string name="clear">CLEAR</string>
+    <string name="speak">SPEAK</string>
 </resources>
