@@ -86,9 +86,7 @@ public class MainActivity extends AppCompatActivity {
             public void onPictureTaken(@NonNull PictureResult result) {
                 byte[] data = result.getData();
                 Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
-
-
-               Toast.makeText(MainActivity.this," "+bmp.getWidth()+" "+bmp.getHeight(),Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this," "+bmp.getWidth()+" "+bmp.getHeight(),Toast.LENGTH_SHORT).show();
                 loadModel(bmp);
             }
         });
