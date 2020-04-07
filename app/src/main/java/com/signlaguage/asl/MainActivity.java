@@ -2,14 +2,11 @@ package com.signlaguage.asl;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
-import android.graphics.Rect;
-import android.graphics.YuvImage;
+
 import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,15 +14,13 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.ml.common.FirebaseMLException;
 import com.google.firebase.ml.custom.FirebaseCustomLocalModel;
@@ -43,7 +38,6 @@ import com.otaliastudios.cameraview.frame.FrameProcessor;
 import com.otaliastudios.cameraview.size.Size;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
@@ -79,18 +73,18 @@ public class MainActivity extends AppCompatActivity {
         });
     }
     private void takePicture(){
-//        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.raw.test1);
-//        loadModel(bm);
-        camera.addCameraListener(new CameraListener() {
-            @Override
-            public void onPictureTaken(@NonNull PictureResult result) {
-                byte[] data = result.getData();
-                Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
-                Toast.makeText(MainActivity.this," "+bmp.getWidth()+" "+bmp.getHeight(),Toast.LENGTH_SHORT).show();
-                loadModel(bmp);
-            }
-        });
-        camera.takePicture();
+        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.raw.test1);
+        loadModel(bm);
+//        camera.addCameraListener(new CameraListener() {
+//            @Override
+//            public void onPictureTaken(@NonNull PictureResult result) {
+//                byte[] data = result.getData();
+//                Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
+//                Toast.makeText(MainActivity.this," "+bmp.getWidth()+" "+bmp.getHeight(),Toast.LENGTH_SHORT).show();
+//                loadModel(bmp);
+//            }
+//        });
+//        camera.takePicture();
     }
     private void startCamera(){
         camera.setFrameProcessingPoolSize(1);
@@ -152,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadModel(Bitmap bitmap) {
 
-        bitmap = Bitmap.createScaledBitmap(bitmap, 64, 64, true);
+
 //        ImageView img = new ImageView(this);
 //        img.setImageBitmap(bitmap);
 //        ((LinearLayout)findViewById(R.id.ll)).addView(img, 0, new LinearLayout.LayoutParams(
@@ -201,68 +195,72 @@ public class MainActivity extends AppCompatActivity {
             inputs = new FirebaseModelInputs.Builder()
                     .add(input)  // add() as many input arrays as your model requires
                     .build();
-            interpreter.run(inputs, inputOutputOptions)
-                    .addOnSuccessListener(
-                            new OnSuccessListener<FirebaseModelOutputs>() {
-                                @Override
-                                public void onSuccess(FirebaseModelOutputs result) {
-                                    float[][] output = result.getOutput(0);
-                                    float[] probabilities = output[0];
-                                    Log.v("probable"," "+ Arrays.toString(probabilities));
-                                    int i = getIndexOfLargest(probabilities);
+            Task<FirebaseModelOutputs> task = interpreter.run(inputs, inputOutputOptions);
+            task.addOnSuccessListener(new OnSuccessListener<FirebaseModelOutputs>() {
+                @Override
+                public void onSuccess(FirebaseModelOutputs firebaseModelOutputs) {
+                    float[][] output = firebaseModelOutputs.getOutput(0);
+                    float[] probabilities = output[0];
+                    Log.v("probable", " " + Arrays.toString(probabilities));
+                    int i = getIndexOfLargest(probabilities);
 
-                                        String[] labels = { "A","B","C","D","DEL","E","F","G","H","I","J","K","L","M","N","NOTHING","O","P","Q","R","S","SPACE"
-                                        ,"T","U","V","W","X","Y","Z"};
-                                        resultTextView.setText(labels[i]);
-//                                        BufferedReader reader = new BufferedReader(
-//                                                new InputStreamReader(getAssets().open("labels.txt")));
-//                                        for (float probability : probabilities) {
-//                                            String label = reader.readLine();
-//                                            Log.v("outputLabel", String.format("%s: %1.4f", label, probability));
-//                                        }
-
-
-                                }
-                            })
-                    .addOnFailureListener(
-                            new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    // Task failed with an exception
-                                    // ...
-                                    Log.v("Result", "" + e.getMessage());
-                                }
-                            });
-        } catch (FirebaseMLException e) {
-            e.printStackTrace();
+                    String[] labels = {"A", "B", "C", "D", "DEL", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "NOTHING", "O", "P", "Q", "R", "S", "SPACE"
+                            , "T", "U", "V", "W", "X", "Y", "Z"};
+                    resultTextView.setText(labels[i]);
+                    BufferedReader reader = null;
+                    try {
+                        reader = new BufferedReader(
+                                new InputStreamReader(getAssets().open("labels.txt")));
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                    for (float probability : probabilities) {
+                        String label = null;
+                        try {
+                            label = reader.readLine();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        Log.v("outputLabel", String.format("%s: %1.4f", label, probability));
+                    }
+                }
+            });
+            task.addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                         Log.v("Model output failed",""+e.getMessage());
+                }
+            });
+        }catch(FirebaseMLException e){
+                e.printStackTrace();
+            }
         }
 
-    }
-    public int getIndexOfLargest( float[] array )
-    {
-        if ( array == null || array.length == 0 ) return -1; // null or empty
 
-        int largest = 0;
-        for ( int i = 1; i < array.length; i++ )
-        {
-            if ( array[i] > array[largest] ) largest = i;
+            public int getIndexOfLargest ( float[] array )
+            {
+                if (array == null || array.length == 0) return -1; // null or empty
+
+                int largest = 0;
+                for (int i = 1; i < array.length; i++) {
+                    if (array[i] > array[largest]) largest = i;
+                }
+                return largest;
+            }
+
+            @Override
+            public boolean onCreateOptionsMenu (Menu menu){
+                MenuInflater inflater = getMenuInflater();
+                inflater.inflate(R.menu.settings, menu);
+                return true;
+            }
+
+            @Override
+            public boolean onOptionsItemSelected (@NonNull MenuItem item){
+                if (item.getItemId() == R.id.ClearText) {
+                    resultTextView.setText(" ");
+                    return true;
+                }
+                return super.onOptionsItemSelected(item);
+            }
         }
-        return largest;
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.settings, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.ClearText) {
-            resultTextView.setText(" ");
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-}
