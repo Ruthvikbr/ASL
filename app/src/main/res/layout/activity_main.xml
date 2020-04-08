@@ -5,44 +5,11 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity"
     android:orientation="vertical"
-    android:id="@+id/ll"
     >
-
-    <com.otaliastudios.cameraview.CameraView
-        android:id="@+id/camera"
-        android:keepScreenOn="true"
-        android:layout_width="match_parent"
-        android:layout_height="450dp" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:weightSum="2"
-        >
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/start"
-            tools:ignore="ButtonStyle"
-            android:layout_weight="1"
-            android:id="@+id/startCamera"
-            />
-        <Button
-            android:id="@+id/stopCamera"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/speak"
-            tools:ignore="ButtonStyle"
-            android:layout_weight="1"
-            />
-    </LinearLayout>
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/resultTextView"
-        android:padding="20dp"
-        />
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="@string/start"
+    />
 
 </LinearLayout>

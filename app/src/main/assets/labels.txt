@@ -1,29 +1,3 @@
-A
-B
-C
-D
-del
-E
-F
-G
-H
-I
-J
-K
-L
-M
-N
-nothing
-O
-P
-Q
-R
-S
-space
-T
-U
-V
-W
-X
-Y
-Z
+0 alexa
+1 is
+2 what
