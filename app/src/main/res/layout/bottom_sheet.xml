@@ -10,7 +10,9 @@
     android:orientation="vertical"
     android:padding="8dp"
     app:behavior_hideable="true"
+
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
 
     <LinearLayout
         android:id="@+id/gesture_layout"
@@ -333,4 +335,14 @@
             android:layout_alignParentRight="true"
             />
     </RelativeLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:id="@+id/resultTv"
+        xmlns:tools="http://schemas.android.com/tools"
+        tools:text="Result text"
+        android:paddingLeft="10dp"
+        android:visibility="visible"
+        />
 </LinearLayout>

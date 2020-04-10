@@ -35,6 +35,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Trace;
 import android.util.Size;
+import android.view.MenuItem;
 import android.view.Surface;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -49,6 +50,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.UiThread;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
@@ -192,9 +194,23 @@ public abstract class CameraActivity extends AppCompatActivity
 
     modelSpinner.setOnItemSelectedListener(this);
     deviceSpinner.setOnItemSelectedListener(this);
-
+    StringBuilder result = new StringBuilder();
     plusImageView.setOnClickListener(this);
     minusImageView.setOnClickListener(this);
+
+    TextView resultTv = findViewById(R.id.resultTv);
+
+    Toolbar toolbar =  findViewById(R.id.toolbar);
+    toolbar.setTitle("Toolbar");
+    toolbar.inflateMenu(R.menu.settings);
+    toolbar.setOnMenuItemClickListener(item -> {
+      if (item.getItemId() == R.id.addText) {
+        result.append(" ");
+        result.append(""+recognitionTextView.getText().toString());
+                resultTv.setText(" "+result);
+      }
+      return false;
+    });
 //
 //    model = Model.valueOf(modelSpinner.getSelectedItem().toString().toUpperCase());
 //    device = Device.valueOf(deviceSpinner.getSelectedItem().toString());
