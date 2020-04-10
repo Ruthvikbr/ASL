@@ -34,6 +34,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Trace;
+import android.speech.tts.TextToSpeech;
 import android.util.Size;
 import android.view.MenuItem;
 import android.view.Surface;
@@ -41,6 +42,7 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
@@ -62,12 +64,14 @@ import com.signlaguage.asl.tflite.Classifier.Recognition;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Locale;
 
 public abstract class CameraActivity extends AppCompatActivity
     implements OnImageAvailableListener,
         Camera.PreviewCallback,
         View.OnClickListener,
-        AdapterView.OnItemSelectedListener {
+        AdapterView.OnItemSelectedListener,
+TextToSpeech.OnInitListener {
 
   private static final int PERMISSIONS_REQUEST = 1;
 
@@ -102,7 +106,7 @@ public abstract class CameraActivity extends AppCompatActivity
   private Spinner modelSpinner;
   private Spinner deviceSpinner;
   private TextView threadsTextView;
-
+  private TextToSpeech tts;
   private Model model = Model.FLOAT_MOBILENET;
 
   private Device device = Device.CPU;
@@ -115,6 +119,9 @@ public abstract class CameraActivity extends AppCompatActivity
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
     setContentView(R.layout.activity_main);
+
+     tts = new TextToSpeech(this,this);
+
 
     if (hasPermission()) {
       setFragment();
@@ -194,27 +201,53 @@ public abstract class CameraActivity extends AppCompatActivity
 
     modelSpinner.setOnItemSelectedListener(this);
     deviceSpinner.setOnItemSelectedListener(this);
-    StringBuilder result = new StringBuilder();
+
     plusImageView.setOnClickListener(this);
     minusImageView.setOnClickListener(this);
 
     TextView resultTv = findViewById(R.id.resultTv);
+    StringBuilder result = new StringBuilder();
 
-    Toolbar toolbar =  findViewById(R.id.toolbar);
-    toolbar.setTitle("Toolbar");
-    toolbar.inflateMenu(R.menu.settings);
-    toolbar.setOnMenuItemClickListener(item -> {
-      if (item.getItemId() == R.id.addText) {
-        result.append(" ");
-        result.append(""+recognitionTextView.getText().toString());
-                resultTv.setText(" "+result);
+    Button add = findViewById(R.id.Add);
+    Button speak = findViewById(R.id.speak);
+
+
+    add.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        String temp = recognitionTextView.getText().toString();
+        result.append(temp);
+        resultTv.setText(" "+result);
+
       }
-      return false;
     });
-//
+    speak.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        //Toast.makeText(CameraActivity.this,""+result,Toast.LENGTH_SHORT).show();
+        speak(result);
+      }
+    });
+
 //    model = Model.valueOf(modelSpinner.getSelectedItem().toString().toUpperCase());
 //    device = Device.valueOf(deviceSpinner.getSelectedItem().toString());
 //    numThreads = Integer.parseInt(threadsTextView.getText().toString().trim());
+  }
+  private void speak(StringBuilder s){
+    tts.speak(s,TextToSpeech.QUEUE_FLUSH,null,null);
+  }
+
+  @Override
+  public void onInit(int status) {
+    if(status==TextToSpeech.SUCCESS) {
+      int result = tts.setLanguage(Locale.US);
+      if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+        Toast.makeText(getApplicationContext(), "Language Not supported", Toast.LENGTH_SHORT).show();
+      }
+    }
+    else{
+      Toast.makeText(getApplicationContext(), "Init Failed", Toast.LENGTH_SHORT).show();
+    }
   }
 
   protected int[] getRgbBytes() {
@@ -380,6 +413,10 @@ public abstract class CameraActivity extends AppCompatActivity
   @Override
   public synchronized void onDestroy() {
     //LOGGER.d("onDestroy " + this);
+    if(tts!=null){
+      tts.stop();
+      tts.shutdown();
+    }
     super.onDestroy();
   }
 
