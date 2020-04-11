@@ -1,3 +1,10 @@
  alexa
+ date
  is
+ my
+ name
+ news
+ the
+ today's
+ weather
  what
