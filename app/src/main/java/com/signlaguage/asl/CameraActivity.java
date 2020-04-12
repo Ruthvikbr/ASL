@@ -210,7 +210,7 @@ TextToSpeech.OnInitListener {
 
     Button add = findViewById(R.id.Add);
     Button speak = findViewById(R.id.speak);
-
+    result.append("alexa");
 
     add.setOnClickListener(new View.OnClickListener() {
       @Override
